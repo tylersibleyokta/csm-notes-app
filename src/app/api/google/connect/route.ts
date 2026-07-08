@@ -2,9 +2,7 @@ import { randomBytes } from "crypto";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { getGoogleAuthUrl } from "@/lib/google";
-
-export const GOOGLE_OAUTH_STATE_COOKIE = "google_oauth_state";
+import { getGoogleAuthUrl, GOOGLE_OAUTH_STATE_COOKIE } from "@/lib/google";
 
 export async function GET() {
   const session = await auth();

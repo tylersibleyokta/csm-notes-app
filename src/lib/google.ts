@@ -4,6 +4,7 @@ import { encrypt, decrypt } from "@/lib/crypto";
 
 const GOOGLE_TASKS_SCOPE = "https://www.googleapis.com/auth/tasks";
 const TASK_LIST_TITLE = "CSM Notes";
+export const GOOGLE_OAUTH_STATE_COOKIE = "google_oauth_state";
 
 function baseUrl(): string {
   return process.env.APP_BASE_URL ?? "http://localhost:3000";

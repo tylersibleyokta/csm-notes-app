@@ -1,8 +1,7 @@
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { linkGoogleAccount } from "@/lib/google";
-import { GOOGLE_OAUTH_STATE_COOKIE } from "@/app/api/google/connect/route";
+import { linkGoogleAccount, GOOGLE_OAUTH_STATE_COOKIE } from "@/lib/google";
 
 function homeUrl(path: string) {
   return new URL(path, process.env.APP_BASE_URL ?? "http://localhost:3000");
