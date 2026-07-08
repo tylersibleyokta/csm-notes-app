@@ -4,7 +4,7 @@ Capture meeting notes, get an AI-cleaned summary plus extracted next-step action
 
 ## Local development
 
-This project uses [Bun](https://bun.sh) (no system Node.js install required). It's backed by Postgres (Neon) rather than SQLite, so you need a `DATABASE_URL` even for local dev — see [Database](#database) below for the fastest way to get one.
+This project uses [Bun](https://bun.sh) (no system Node.js install required). It's backed by Postgres rather than SQLite, so you need a `DATABASE_URL` even for local dev — see [Database](#database) below for the fastest way to get one.
 
 ```bash
 bun install
@@ -23,23 +23,24 @@ Copy `.env.example` values you don't have into `.env` and fill them in.
 
 ## Database
 
-The app uses Postgres via [Neon](https://neon.tech)'s serverless driver (`@prisma/adapter-neon`) — this works both locally and in Vercel's serverless functions without connection-pool exhaustion.
+The app connects to Postgres via `@prisma/adapter-pg` (plain `pg`/TCP), which works with any standard Postgres connection string — including Vercel's "Prisma Postgres" storage integration, a self-hosted Postgres, Neon, RDS, etc.
 
 Get a `DATABASE_URL`:
 
-- **Fastest for local dev**: `bunx create-db --ttl 24h --env .env` spins up a free temporary Prisma Postgres database and writes `DATABASE_URL` straight into `.env`. It auto-deletes after the TTL unless you claim it (the command prints a claim URL) — fine for poking around, not for anything you want to keep.
-- **For a real, permanent database**: create a free Neon project at [neon.tech](https://neon.tech), or provision one from Vercel's dashboard (Project → Storage → Create Database → Postgres, powered by Neon) once you've imported the repo there — either way, copy the connection string into `DATABASE_URL`.
+- **If using Vercel's Prisma Postgres storage** (Project → Storage → Create Database → Prisma Postgres): use the `POSTGRES_URL` value it gives you, **not** `PRISMA_DATABASE_URL` (that one's a `prisma+postgres://` Accelerate URL meant for a different connection method than the plain driver adapter this app uses).
+- **Fastest for a quick local check**: `bunx create-db --ttl 24h --env .env` spins up a free temporary Prisma Postgres database and writes `DATABASE_URL` straight into `.env`. It auto-deletes after the TTL unless you claim it — fine for poking around, not for anything you want to keep.
 
 Then run `bun --bun run prisma migrate dev --name init` once to create the schema.
 
 ## Deploying to Vercel
 
 1. Go to [vercel.com/new](https://vercel.com/new) and import `tylersibleyokta/csm-notes-app` from GitHub.
-2. Before the first deploy, add the environment variables from `.env.example` under Project → Settings → Environment Variables: `APP_BASE_URL` (your Vercel URL), `ANTHROPIC_API_KEY`, `TOKEN_ENCRYPTION_KEY`, `AUTH_SECRET`, `GOOGLE_CLIENT_ID`/`SECRET` (redirect URI now `https://<your-app>.vercel.app/api/google/callback`), and later `OKTA_*` once that's set up.
-3. Provision the database: Project → Storage → Create Database → Postgres — this creates a Neon Postgres and wires `DATABASE_URL` into the project automatically.
-4. Deploy. Then run the initial migration against that database once (e.g. `bun --bun run prisma migrate deploy` with `DATABASE_URL` set locally to the production connection string, or via Vercel's dashboard shell).
+2. Provision a database if you haven't: Project → Storage → Create Database → Prisma Postgres.
+3. Set `DATABASE_URL` in Project → Settings → Environment Variables to that database's `POSTGRES_URL` value (see [Database](#database) above — not `PRISMA_DATABASE_URL`).
+4. Add the rest of the environment variables from `.env.example`: `APP_BASE_URL` (your Vercel URL), `ANTHROPIC_API_KEY`, `TOKEN_ENCRYPTION_KEY`, `AUTH_SECRET`, `GOOGLE_CLIENT_ID`/`SECRET` (redirect URI now `https://<your-app>.vercel.app/api/google/callback`), and later `OKTA_*` once that's set up.
+5. Deploy. Then run the initial migration against that database once (e.g. `bun --bun run prisma migrate deploy` with `DATABASE_URL` set locally to the production connection string).
 
-> Note: I tried to do this deploy for you via the `vercel` CLI, but it failed at login with `self signed certificate in certificate chain` — a corporate TLS-inspection certificate that the CLI's bundled Node doesn't trust. Plain `curl`/browser HTTPS to vercel.com works fine on this machine, so the dashboard flow above should be unaffected; you may hit the same CLI error if you try `vercel login` yourself.
+> Note: I tried to do this deploy via the `vercel` CLI, but it failed at login with `self signed certificate in certificate chain` — a corporate TLS-inspection certificate that the CLI's bundled Node doesn't trust. Plain `curl`/browser HTTPS to vercel.com works fine on this machine, so the dashboard flow above should be unaffected; you may hit the same CLI error if you try `vercel login` yourself.
 
 ## Wiring up real Okta SSO (when ready)
 
