@@ -59,6 +59,7 @@ Once all three are set, the app automatically switches from the dev-mode login s
 
 This is a separate OAuth flow from app login — it's scoped only to Google Tasks access for the signed-in user, tied to their account via the "Connect Google Tasks" button.
 
-## Known quirk
+## Known quirks
 
-`next dev`/`next build` run with `--webpack` (see `package.json`) — Turbopack, the Next 16 default, fails to resolve Prisma 7's generated client under Bun's node_modules layout.
+- `next dev`/`next build` run with `--webpack` (see `package.json`) — Turbopack, the Next 16 default, fails to resolve Prisma 7's generated client under Bun's node_modules layout.
+- `next dev` also runs with `NODE_TLS_REJECT_UNAUTHORIZED=0` (see `package.json`) — on networks with corporate TLS inspection, Bun's runtime doesn't respect `pg`'s per-connection `ssl: { rejectUnauthorized: false }` option the way real Node.js does, so the Postgres connection fails with `self signed certificate in certificate chain` without this. This is scoped to the local `dev` script only — it doesn't affect the actual deployed app on Vercel, which runs on Node.js and isn't behind that proxy in the first place, and `prisma migrate` isn't affected either since it uses Prisma's own native migration engine rather than the JS driver.
